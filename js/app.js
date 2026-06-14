@@ -6,6 +6,20 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* =========================
+FIREBASE COLLECTIONS
+========================= */
+
+const categoriesRef = collection(db, "categories");
+const productsRef = collection(db, "products");
+const ordersRef = collection(db, "orders");
+
+window.products = [];
+
+/* =========================
+SIDEBAR
+========================= */
+
 const menuBtn = document.getElementById("menuBtn");
 const sidebar = document.getElementById("sidebar");
 const overlay = document.getElementById("overlay");
@@ -14,9 +28,11 @@ if (menuBtn) {
 
   menuBtn.addEventListener("click", () => {
 
-    sidebar.classList.toggle("active");
+    ```
+sidebar.classList.toggle("active");
 
-    overlay.classList.toggle("active");
+overlay.classList.toggle("active");
+```
 
   });
 
@@ -26,199 +42,353 @@ if (overlay) {
 
   overlay.addEventListener("click", () => {
 
-    sidebar.classList.remove("active");
+    ```
+sidebar.classList.remove("active");
 
-    overlay.classList.remove("active");
+overlay.classList.remove("active");
+```
 
   });
 
 }
 
-const sidebar=document.getElementById("sidebar");
-const overlay=document.getElementById("overlay");
-const menuBtn=document.getElementById("menuBtn");
+/* =========================
+LOAD CATEGORIES
+========================= */
 
-if(menuBtn){
-menuBtn.onclick=()=>{
-sidebar.classList.toggle("active");
-overlay.classList.toggle("active");
-}
-}
+function loadCategories() {
 
-if(overlay){
-overlay.onclick=()=>{
-sidebar.classList.remove("active");
-overlay.classList.remove("active");
-}
+  const categoryList =
+    document.getElementById("categoryList");
+
+  onSnapshot(categoriesRef, (snapshot) => {
+
+    ```
+if (categoryList) {
+  categoryList.innerHTML = "";
 }
 
-const {collection,addDoc,onSnapshot}=window.fb;
-const db=window.db;
+document
+  .querySelectorAll(".categoryDropdown")
+  .forEach(dropdown => {
 
-// const categoriesRef=collection(db,"categories");
-const productsRef=collection(db,"products");
-const ordersRef=collection(db,"orders");
+    dropdown.innerHTML =
+      '<option value="">Select Category</option>';
 
-window.products=[];
+  });
 
-// function loadCategories(){
-// const categoryList=document.getElementById("categoryList");
+snapshot.forEach(doc => {
 
-// onSnapshot(categoriesRef,(snapshot)=>{
+  const data = doc.data();
 
-// if(categoryList) categoryList.innerHTML="";
+  document
+    .querySelectorAll(".categoryDropdown")
+    .forEach(dropdown => {
 
-// document.querySelectorAll(".categoryDropdown").forEach(d=>{
-// d.innerHTML='<option value="">Select Category</option>';
-// });
+      dropdown.innerHTML += `
+      < option value = "${data.name}" >
+        ${ data.name }
+        </option >
+      `;
 
-// snapshot.forEach(doc=>{
+    });
 
-// const data=doc.data();
+  if (categoryList) {
 
-// document.querySelectorAll(".categoryDropdown").forEach(d=>{
-// d.innerHTML+=`<option value="${data.name}">${data.name}</option>`;
-// });
+    categoryList.innerHTML += `
+      < div class="order-card" >
+        ${ data.name }
+      </div >
+      `;
 
-// if(categoryList){
-// categoryList.innerHTML+=`<div class="order-card">${data.name}</div>`;
-// }
+  }
 
-// });
+});
+```
 
-// });
-// }
+  });
 
-const categoryForm = document.getElementById("categoryForm");
+}
+
+/* =========================
+SAVE CATEGORY
+========================= */
+
+const categoryForm =
+  document.getElementById("categoryForm");
 
 if (categoryForm) {
 
-  categoryForm.addEventListener("submit", async (e) => {
+  categoryForm.addEventListener("submit",
+    async (e) => {
 
-    e.preventDefault();
+      ```
+  e.preventDefault();
 
-    const categoryName =
-      document.getElementById("categoryName").value;
+  const categoryName =
+    document.getElementById("categoryName").value;
 
-    try {
+  try {
 
-      await addDoc(
-        collection(db, "categories"),
-        {
-          name: categoryName
-        }
-      );
+    await addDoc(categoriesRef, {
+      name: categoryName
+    });
 
-      alert("Category Saved");
+    alert("Category Saved");
 
-      categoryForm.reset();
+    categoryForm.reset();
 
-    } catch (error) {
+  } catch (error) {
 
-      console.log(error);
+    console.log(error);
 
-      alert("Save Failed");
+    alert("Save Failed");
+
+  }
+
+});
+```
 
     }
 
-  });
+/* =========================
+LOAD PRODUCTS
+========================= */
 
+function loadProducts() {
+
+      const productList =
+        document.getElementById("productList");
+
+      onSnapshot(productsRef, (snapshot) => {
+
+        ```
+window.products = [];
+
+if (productList) {
+  productList.innerHTML = "";
 }
 
-function loadProducts(){
-const productList=document.getElementById("productList");
+snapshot.forEach(doc => {
 
-onSnapshot(productsRef,(snapshot)=>{
+  const data = doc.data();
 
-window.products=[];
+  window.products.push(data);
 
-if(productList) productList.innerHTML="";
+  if (productList) {
 
-snapshot.forEach(doc=>{
+    productList.innerHTML += `
+          < div class="order-card" >
+            ${ data.name }
+        <br>
+          ${data.category}
+        </div>
+        `;
 
-const data=doc.data();
-
-window.products.push(data);
-
-if(productList){
-productList.innerHTML+=`<div class="order-card">${data.name}<br>${data.category}</div>`;
-}
+  }
 
 });
+```
+
+      });
+
+    }
+
+/* =========================
+SAVE PRODUCT
+========================= */
+
+const productForm =
+    document.getElementById("productForm");
+
+  if (productForm) {
+
+    productForm.addEventListener("submit",
+      async (e) => {
+
+        ```
+  e.preventDefault();
+
+  try {
+
+    await addDoc(productsRef, {
+
+      name:
+        document.getElementById("productName").value,
+
+      category:
+        document.getElementById("productCategory").value
+
+    });
+
+    alert("Product Saved");
+
+    productForm.reset();
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Save Failed");
+
+  }
 
 });
-}
+```
 
-function loadOrders(){
-const orderList=document.getElementById("orderList");
+      }
 
-onSnapshot(ordersRef,(snapshot)=>{
+/* =========================
+CATEGORY FILTER PRODUCTS
+========================= */
 
-if(orderList) orderList.innerHTML="";
+const orderCategory =
+      document.getElementById("orderCategory");
 
-snapshot.forEach(doc=>{
+    if (orderCategory) {
 
-const data=doc.data();
+      orderCategory.addEventListener("change", () => {
 
-if(orderList){
-orderList.innerHTML+=`<div class="order-card">${data.customer}<br>${data.date}<br>${data.category}<br>${data.product}</div>`;
-}
+        ```
+const productDropdown =
+  document.getElementById("productDropdown");
 
-});
-
-});
-}
-
-const categoryForm=document.getElementById("categoryForm");
-if(categoryForm){
-categoryForm.onsubmit=async(e)=>{
-e.preventDefault();
-await addDoc(categoriesRef,{name:categoryName.value});
-categoryForm.reset();
-}
-}
-
-const productForm=document.getElementById("productForm");
-if(productForm){
-productForm.onsubmit=async(e)=>{
-e.preventDefault();
-await addDoc(productsRef,{
-name:productName.value,
-category:productCategory.value
-});
-productForm.reset();
-}
-}
-
-const orderCategory=document.getElementById("orderCategory");
-if(orderCategory){
-orderCategory.onchange=()=>{
-productDropdown.innerHTML='<option>Select Product</option>';
+productDropdown.innerHTML =
+  '<option value="">Select Product</option>';
 
 window.products
-.filter(p=>p.category===orderCategory.value)
-.forEach(p=>{
-productDropdown.innerHTML+=`<option value="${p.name}">${p.name}</option>`;
-});
-}
+  .filter(product =>
+    product.category === orderCategory.value
+  )
+  .forEach(product => {
+
+    productDropdown.innerHTML += `
+          < option value = "${product.name}" >
+            ${ product.name }
+      </option >
+          `;
+
+  });
+```
+
+      });
+
+    }
+
+    /* =========================
+    LOAD ORDERS
+    ========================= */
+
+    function loadOrders() {
+
+      const orderList =
+        document.getElementById("orderList");
+
+      onSnapshot(ordersRef, (snapshot) => {
+
+        ```
+if (orderList) {
+  orderList.innerHTML = "";
 }
 
-const orderForm=document.getElementById("orderForm");
-if(orderForm){
-orderForm.onsubmit=async(e)=>{
-e.preventDefault();
-await addDoc(ordersRef,{
-date:orderDate.value,
-customer:customerName.value,
-category:orderCategory.value,
-product:productDropdown.value
+snapshot.forEach(doc => {
+
+  const data = doc.data();
+
+  if (orderList) {
+
+    orderList.innerHTML += `
+          < div class="order-card" >
+
+        <strong>${data.customer}</strong>
+
+        <br><br>
+
+        Date:
+        ${data.date}
+
+        <br>
+
+        Category:
+        ${data.category}
+
+        <br>
+
+        Product:
+        ${data.product}
+
+      </div>
+    `;
+
+  }
+
 });
-orderForm.reset();
-}
+```
+
+});
+
 }
 
-window.onload=()=>{
+/* =========================
+SAVE ORDER
+========================= */
+
+const orderForm =
+document.getElementById("orderForm");
+
+if (orderForm) {
+
+orderForm.addEventListener("submit",
+async (e) => {
+
+```
+  e.preventDefault();
+
+  try {
+
+    await addDoc(ordersRef, {
+
+      date:
+        document.getElementById("orderDate").value,
+
+      customer:
+        document.getElementById("customerName").value,
+
+      category:
+        document.getElementById("orderCategory").value,
+
+      product:
+        document.getElementById("productDropdown").value
+
+    });
+
+    alert("Order Saved");
+
+    orderForm.reset();
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Save Failed");
+
+  }
+
+});
+```
+
+}
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+window.addEventListener("DOMContentLoaded", () => {
+
 loadCategories();
+
 loadProducts();
+
 loadOrders();
-}
+
+});
