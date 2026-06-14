@@ -28,10 +28,10 @@ const {collection,addDoc,onSnapshot}=window.fb;
 const db=window.db;
 
 // const categoriesRef=collection(db,"categories");
-// const productsRef=collection(db,"products");
-// const ordersRef=collection(db,"orders");
+const productsRef=collection(db,"products");
+const ordersRef=collection(db,"orders");
 
-// window.products=[];
+window.products=[];
 
 // function loadCategories(){
 // const categoryList=document.getElementById("categoryList");
