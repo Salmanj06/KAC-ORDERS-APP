@@ -17,365 +17,137 @@ overlay.classList.remove("active");
 }
 }
 
-const themeToggle=document.getElementById("themeToggle");
+const {collection,addDoc,onSnapshot}=window.fb;
+const db=window.db;
 
-if(themeToggle){
-themeToggle.onclick=()=>{
-document.body.classList.toggle("light");
-localStorage.setItem("theme",document.body.classList.contains("light")?"light":"dark");
-}
-}
+const categoriesRef=collection(db,"categories");
+const productsRef=collection(db,"products");
+const ordersRef=collection(db,"orders");
 
-if(localStorage.getItem("theme")==="light"){
-document.body.classList.add("light");
-}
+window.products=[];
 
-/* =========================
-DATABASE
-========================= */
+function loadCategories(){
+const categoryList=document.getElementById("categoryList");
 
-let categories = JSON.parse(localStorage.getItem("kac-categories")) || [];
-let products = JSON.parse(localStorage.getItem("kac-products")) || [];
-let orders = JSON.parse(localStorage.getItem("kac-orders")) || [];
+onSnapshot(categoriesRef,(snapshot)=>{
 
-function saveAll(){
-localStorage.setItem("kac-categories", JSON.stringify(categories));
-localStorage.setItem("kac-products", JSON.stringify(products));
-localStorage.setItem("kac-orders", JSON.stringify(orders));
-}
+if(categoryList) categoryList.innerHTML="";
 
-/* =========================
-CATEGORY LOGIC
-========================= */
+document.querySelectorAll(".categoryDropdown").forEach(d=>{
+d.innerHTML='<option value="">Select Category</option>';
+});
 
-function renderCategories(){
-const categoryList = document.getElementById("categoryList");
+snapshot.forEach(doc=>{
 
-if(!categoryList) return;
+const data=doc.data();
 
-categoryList.innerHTML = "";
+document.querySelectorAll(".categoryDropdown").forEach(d=>{
+d.innerHTML+=`<option value="${data.name}">${data.name}</option>`;
+});
 
-if(categories.length === 0){
-categoryList.innerHTML = "<p>No categories added yet.</p>";
-return;
+if(categoryList){
+categoryList.innerHTML+=`<div class="order-card">${data.name}</div>`;
 }
 
-categories.forEach((category,index)=>{
-
-const div = document.createElement("div");
-div.className = "order-card";
-
-div.innerHTML = `
-<h3>${category}</h3>
-
-<div class="order-actions">
-<button onclick="deleteCategory(${index})">Delete</button>
-</div>
-`;
-
-categoryList.appendChild(div);
+});
 
 });
 }
 
-function deleteCategory(index){
-categories.splice(index,1);
-saveAll();
-renderCategories();
-loadCategoryDropdowns();
+function loadProducts(){
+const productList=document.getElementById("productList");
+
+onSnapshot(productsRef,(snapshot)=>{
+
+window.products=[];
+
+if(productList) productList.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+const data=doc.data();
+
+window.products.push(data);
+
+if(productList){
+productList.innerHTML+=`<div class="order-card">${data.name}<br>${data.category}</div>`;
 }
 
-const categoryForm = document.getElementById("categoryForm");
+});
 
+});
+}
+
+function loadOrders(){
+const orderList=document.getElementById("orderList");
+
+onSnapshot(ordersRef,(snapshot)=>{
+
+if(orderList) orderList.innerHTML="";
+
+snapshot.forEach(doc=>{
+
+const data=doc.data();
+
+if(orderList){
+orderList.innerHTML+=`<div class="order-card">${data.customer}<br>${data.date}<br>${data.category}<br>${data.product}</div>`;
+}
+
+});
+
+});
+}
+
+const categoryForm=document.getElementById("categoryForm");
 if(categoryForm){
-categoryForm.addEventListener("submit",(e)=>{
-
+categoryForm.onsubmit=async(e)=>{
 e.preventDefault();
-
-const categoryName = document.getElementById("categoryName").value.trim();
-
-if(!categoryName) return;
-
-if(categories.includes(categoryName)){
-alert("Category already exists");
-return;
-}
-
-categories.push(categoryName);
-
-saveAll();
-
+await addDoc(categoriesRef,{name:categoryName.value});
 categoryForm.reset();
-
-renderCategories();
-
-loadCategoryDropdowns();
-
-});
+}
 }
 
-/* =========================
-CATEGORY DROPDOWNS
-========================= */
-
-function loadCategoryDropdowns(){
-
-const dropdowns = document.querySelectorAll(".categoryDropdown");
-
-dropdowns.forEach(dropdown=>{
-
-const currentValue = dropdown.value;
-
-dropdown.innerHTML = `<option value="">Select Category</option>`;
-
-categories.forEach(category=>{
-
-dropdown.innerHTML += `
-<option value="${category}">
-${category}
-</option>
-`;
-
-});
-
-dropdown.value = currentValue;
-
-});
-
-}
-
-/* =========================
-PRODUCT LOGIC
-========================= */
-
-function renderProducts(){
-
-const productList = document.getElementById("productList");
-
-if(!productList) return;
-
-productList.innerHTML = "";
-
-if(products.length === 0){
-productList.innerHTML = "<p>No products added yet.</p>";
-return;
-}
-
-products.forEach((product,index)=>{
-
-const div = document.createElement("div");
-
-div.className = "order-card";
-
-div.innerHTML = `
-<h3>${product.name}</h3>
-<p>Category: ${product.category}</p>
-
-<div class="order-actions">
-<button onclick="deleteProduct(${index})">Delete</button>
-</div>
-`;
-
-productList.appendChild(div);
-
-});
-
-}
-
-function deleteProduct(index){
-
-products.splice(index,1);
-
-saveAll();
-
-renderProducts();
-
-}
-
-const productForm = document.getElementById("productForm");
-
+const productForm=document.getElementById("productForm");
 if(productForm){
-
-productForm.addEventListener("submit",(e)=>{
-
+productForm.onsubmit=async(e)=>{
 e.preventDefault();
-
-const productName = document.getElementById("productName").value.trim();
-
-const productCategory = document.getElementById("productCategory").value;
-
-if(!productName || !productCategory){
-alert("Fill all fields");
-return;
-}
-
-products.push({
-name: productName,
-category: productCategory
+await addDoc(productsRef,{
+name:productName.value,
+category:productCategory.value
 });
-
-saveAll();
-
 productForm.reset();
-
-renderProducts();
-
-});
-
+}
 }
 
-/* =========================
-ORDER PRODUCT FILTER
-========================= */
-
-const orderCategory = document.getElementById("orderCategory");
-
+const orderCategory=document.getElementById("orderCategory");
 if(orderCategory){
+orderCategory.onchange=()=>{
+productDropdown.innerHTML='<option>Select Product</option>';
 
-orderCategory.addEventListener("change",(e)=>{
-
-loadProductsByCategory(e.target.value);
-
+window.products
+.filter(p=>p.category===orderCategory.value)
+.forEach(p=>{
+productDropdown.innerHTML+=`<option value="${p.name}">${p.name}</option>`;
 });
-
+}
 }
 
-function loadProductsByCategory(category){
-
-const productDropdown = document.getElementById("productDropdown");
-
-if(!productDropdown) return;
-
-productDropdown.innerHTML = `
-<option value="">Select Product</option>
-`;
-
-products
-.filter(product=>product.category===category)
-.forEach(product=>{
-
-productDropdown.innerHTML += `
-<option value="${product.name}">
-${product.name}
-</option>
-`;
-
-});
-
-}
-
-/* =========================
-ORDER LOGIC
-========================= */
-
-function renderOrders(){
-
-const orderList = document.getElementById("orderList") || document.getElementById("ordersContainer");
-
-if(!orderList) return;
-
-orderList.innerHTML = "";
-
-if(orders.length === 0){
-orderList.innerHTML = "<p>No orders added yet.</p>";
-return;
-}
-
-orders.slice().reverse().forEach(order=>{
-
-const div = document.createElement("div");
-
-div.className = "order-card";
-
-div.innerHTML = `
-<h3>${order.customerName || order.customer}</h3>
-<p>Date: ${order.orderDate || order.date}</p>
-<p>Category: ${order.category}</p>
-<p>Product: ${order.product}</p>
-<p>₹${order.amount || 0}</p>
-<p>Status: ${order.status || "Pending"}</p>
-`;
-
-orderList.appendChild(div);
-
-});
-
-}
-
-const orderForm = document.getElementById("orderForm");
-
+const orderForm=document.getElementById("orderForm");
 if(orderForm){
-
-orderForm.addEventListener("submit",(e)=>{
-
+orderForm.onsubmit=async(e)=>{
 e.preventDefault();
-
-const orderData = {
-id: Date.now().toString(),
-orderDate: document.getElementById("orderDate")?.value || "",
-customerName: document.getElementById("customerName")?.value || "",
-phone: document.getElementById("phone")?.value || "",
-category: document.getElementById("orderCategory")?.value || "",
-product: document.getElementById("productDropdown")?.value || "",
-amount: document.getElementById("amount")?.value || "",
-status: document.getElementById("status")?.value || "Pending",
-notes: document.getElementById("notes")?.value || ""
-};
-
-orders.push(orderData);
-
-saveAll();
-
+await addDoc(ordersRef,{
+date:orderDate.value,
+customer:customerName.value,
+category:orderCategory.value,
+product:productDropdown.value
+});
 orderForm.reset();
-
-renderOrders();
-
-});
-
+}
 }
 
-/* =========================
-DASHBOARD
-========================= */
-
-function updateDashboard(){
-
-const total = document.getElementById("totalOrders");
-
-const pending = document.getElementById("pendingOrders");
-
-const completed = document.getElementById("completedOrders");
-
-if(total) total.innerText = orders.length;
-
-if(pending){
-pending.innerText = orders.filter(order=>
-(order.status || "").toLowerCase()==="pending"
-).length;
+window.onload=()=>{
+loadCategories();
+loadProducts();
+loadOrders();
 }
-
-if(completed){
-completed.innerText = orders.filter(order=>
-(order.status || "").toLowerCase()==="completed"
-).length;
-}
-
-}
-
-/* =========================
-INIT
-========================= */
-
-window.addEventListener("DOMContentLoaded",()=>{
-
-loadCategoryDropdowns();
-
-renderCategories();
-
-renderProducts();
-
-renderOrders();
-
-updateDashboard();
-
-});
