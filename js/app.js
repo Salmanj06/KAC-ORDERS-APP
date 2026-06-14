@@ -6,6 +6,34 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+
+if (menuBtn) {
+
+  menuBtn.addEventListener("click", () => {
+
+    sidebar.classList.toggle("active");
+
+    overlay.classList.toggle("active");
+
+  });
+
+}
+
+if (overlay) {
+
+  overlay.addEventListener("click", () => {
+
+    sidebar.classList.remove("active");
+
+    overlay.classList.remove("active");
+
+  });
+
+}
+
 const sidebar=document.getElementById("sidebar");
 const overlay=document.getElementById("overlay");
 const menuBtn=document.getElementById("menuBtn");
