@@ -1,3 +1,10 @@
+import { db } from "./firebase.js";
+
+import {
+  collection,
+  addDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const sidebar=document.getElementById("sidebar");
 const overlay=document.getElementById("overlay");
@@ -20,38 +27,74 @@ overlay.classList.remove("active");
 const {collection,addDoc,onSnapshot}=window.fb;
 const db=window.db;
 
-const categoriesRef=collection(db,"categories");
-const productsRef=collection(db,"products");
-const ordersRef=collection(db,"orders");
+// const categoriesRef=collection(db,"categories");
+// const productsRef=collection(db,"products");
+// const ordersRef=collection(db,"orders");
 
-window.products=[];
+// window.products=[];
 
-function loadCategories(){
-const categoryList=document.getElementById("categoryList");
+// function loadCategories(){
+// const categoryList=document.getElementById("categoryList");
 
-onSnapshot(categoriesRef,(snapshot)=>{
+// onSnapshot(categoriesRef,(snapshot)=>{
 
-if(categoryList) categoryList.innerHTML="";
+// if(categoryList) categoryList.innerHTML="";
 
-document.querySelectorAll(".categoryDropdown").forEach(d=>{
-d.innerHTML='<option value="">Select Category</option>';
-});
+// document.querySelectorAll(".categoryDropdown").forEach(d=>{
+// d.innerHTML='<option value="">Select Category</option>';
+// });
 
-snapshot.forEach(doc=>{
+// snapshot.forEach(doc=>{
 
-const data=doc.data();
+// const data=doc.data();
 
-document.querySelectorAll(".categoryDropdown").forEach(d=>{
-d.innerHTML+=`<option value="${data.name}">${data.name}</option>`;
-});
+// document.querySelectorAll(".categoryDropdown").forEach(d=>{
+// d.innerHTML+=`<option value="${data.name}">${data.name}</option>`;
+// });
 
-if(categoryList){
-categoryList.innerHTML+=`<div class="order-card">${data.name}</div>`;
-}
+// if(categoryList){
+// categoryList.innerHTML+=`<div class="order-card">${data.name}</div>`;
+// }
 
-});
+// });
 
-});
+// });
+// }
+
+const categoryForm = document.getElementById("categoryForm");
+
+if (categoryForm) {
+
+  categoryForm.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const categoryName =
+      document.getElementById("categoryName").value;
+
+    try {
+
+      await addDoc(
+        collection(db, "categories"),
+        {
+          name: categoryName
+        }
+      );
+
+      alert("Category Saved");
+
+      categoryForm.reset();
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Save Failed");
+
+    }
+
+  });
+
 }
 
 function loadProducts(){
